@@ -11,6 +11,7 @@ import net.eekysam.jflick.Output.EnumOutType;
 import net.eekysam.jflick.ProgramReader.BrainfuckFormatException;
 import net.eekysam.jflick.io.InputFromConsole;
 import net.eekysam.jflick.io.InputFromFile;
+import net.eekysam.jflick.io.InputFromStringConsole;
 import net.eekysam.jflick.io.OutputFromConsole;
 import net.eekysam.jflick.io.OutputFromFile;
 
@@ -22,7 +23,14 @@ public class Main
 		File inf = null;
 		File outf = null;
 		EnumOutType outt = EnumOutType.RAW;
-
+		boolean str = false;
+		boolean rtrn = false;
+		int size = 2048;
+		int off = 64;
+		
+		boolean save = false;
+		File outs = null;
+		
 		ArrayDeque<String> q = new ArrayDeque<String>();
 		q.addAll(Arrays.asList(args));
 
@@ -60,6 +68,32 @@ public class Main
 							break;
 						case "-o":
 							outf = new File(q.poll());
+							break;
+						case "-s":
+							str = true;
+							break;
+						case "-r":
+							rtrn = true;
+							if (q.peek() != null && !q.peek().startsWith("-"))
+							{
+								Config.enter = (char) Integer.parseInt(q.poll(), 16);
+							}
+							break;
+						case "-m":
+							size = Integer.parseInt(q.poll());
+							break;
+						case "-mo":
+							off = Integer.parseInt(q.poll());
+							break;
+						case "-d":
+							Config.debug = true;
+							break;
+						case "-C":
+							outs = new File(q.poll());
+							save = true;
+							break;
+						case "-c":
+							save = true;
 							break;
 						default:
 							try
@@ -109,7 +143,14 @@ public class Main
 		Input in;
 		if (inf == null)
 		{
-			in = new InputFromConsole();
+			if (str)
+			{
+				in = new InputFromStringConsole(rtrn);
+			}
+			else
+			{
+				in = new InputFromConsole(rtrn);
+			}
 		}
 		else
 		{
@@ -134,7 +175,7 @@ public class Main
 
 		try
 		{
-			app = new Program(program, in, out);
+			app = new Program(program, in, out, size, off);
 		}
 		catch (BrainfuckFormatException e)
 		{
@@ -143,6 +184,11 @@ public class Main
 		}
 
 		app.run();
+		
+		if (save)
+		{
+			app.saveCode(outs);
+		}
 	}
 
 	public static void printHelp()
@@ -157,8 +203,22 @@ public class Main
 		System.out.println("\t\tspecify a file to use as the input");
 		System.out.println("\t-o <input file>");
 		System.out.println("\t\tspecify a file to use as the output");
+		System.out.println("\t-s");
+		System.out.println("\t\ttake input from console as raw strings");
+		System.out.println("\t-r [return char number in hex]");
+		System.out.println("\t\tadd return character to the end of every colsole input (default: 0D)");
+		System.out.println("\t-d");
+		System.out.println("\t\tenable speed debug info");
+		System.out.println("\t-m <memory size>");
+		System.out.println("\t\tset the size of the memory (default: 2048)");
+		System.out.println("\t-mo <offset>");
+		System.out.println("\t\tset the number of bytes left of the starting memory (default: 64)");
+		System.out.println("\t-c");
+		System.out.println("\t\tshow raw code in output");
+		System.out.println("\t-C <save file>");
+		System.out.println("\t\tsave raw code to file");
 		System.out.println("\t-RAW");
-		System.out.println("\t\toutput raw data");
+		System.out.println("\t\toutput raw data (default)");
 		System.out.println("\t-HEX");
 		System.out.println("\t\toutput data as hexadecimal");
 		System.out.println("\t-DEC");

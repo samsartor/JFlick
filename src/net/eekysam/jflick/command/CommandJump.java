@@ -1,5 +1,6 @@
 package net.eekysam.jflick.command;
 
+import net.eekysam.jflick.Config;
 import net.eekysam.jflick.Program;
 import net.eekysam.jflick.Command;
 
@@ -19,5 +20,11 @@ public class CommandJump extends Command
 			point = this.to;
 		}
 		return point + 1;
+	}
+
+	@Override
+	public String expand()
+	{
+		return "" + Config.jump;
 	}
 }

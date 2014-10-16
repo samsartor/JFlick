@@ -9,5 +9,7 @@ public abstract class Command
 		this.loc = loc;
 	}
 
-	public abstract int run(int point, Program app); 
+	public abstract int run(int point, Program app);
+	
+	public abstract String expand();
 }

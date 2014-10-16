@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import net.eekysam.jflick.command.CommandAdd;
 import net.eekysam.jflick.command.CommandBack;
+import net.eekysam.jflick.command.CommandCopy;
 import net.eekysam.jflick.command.CommandFindZero;
 import net.eekysam.jflick.command.CommandJump;
 import net.eekysam.jflick.command.CommandMove;
@@ -49,13 +50,17 @@ public class ProgramReader
 		this.readBase();
 		this.simplifyZero();
 		this.simplifyFindZero();
+		this.simplifyMove();
 		this.updateLocs();
 		this.num = this.app.size();
 
 		ns = System.nanoTime() - ns;
 		int length = this.chars.length();
-		System.out.printf("Finished parsing a %,d character program in %.2fms containing %,d commands%n", length, ns / 1000000.0F, length - this.ignored);
-		System.out.printf("Abbreviation reduced the program to %,d commands (%.0f%%)%n%n", this.num, (this.num * 100.0F) / (length - this.ignored));
+		if (Config.debug)
+		{
+			System.out.printf("Finished parsing a %,d character program in %.2fms containing %,d commands%n", length, ns / 1000000.0F, length - this.ignored);
+			System.out.printf("Abbreviation reduced the program to %,d abbreviated commands (%.0f%%)%n%n", this.num, (this.num * 100.0F) / (length - this.ignored));
+		}
 
 	}
 
@@ -92,6 +97,35 @@ public class ProgramReader
 				this.app.remove(i);
 				this.app.remove(i);
 				this.app.add(i, new CommandFindZero(((CommandMove) b).num, a.loc));
+			}
+		}
+	}
+
+	private void simplifyMove()
+	{
+		for (int i = 0; i < this.app.size() - 6; i++)
+		{
+			Command a = this.app.get(i);
+			Command b = this.app.get(i + 1);
+			Command c = this.app.get(i + 2);
+			Command d = this.app.get(i + 3);
+			Command e = this.app.get(i + 4);
+			Command f = this.app.get(i + 5);
+			if (a instanceof CommandJump && b instanceof CommandMove && c instanceof CommandAdd && d instanceof CommandMove && e instanceof CommandAdd && f instanceof CommandBack)
+			{
+				if (((CommandMove) b).num == -((CommandMove) d).num && ((CommandAdd) e).num == -1)
+				{
+					this.app.remove(i);
+					this.app.remove(i);
+					this.app.remove(i);
+					this.app.remove(i);
+					this.app.remove(i);
+					this.app.remove(i);
+					CommandCopy com = new CommandCopy(a.loc);
+					com.move = ((CommandMove) b).num;
+					com.mult = ((CommandAdd) c).num;
+					this.app.add(i, com);
+				}
 			}
 		}
 	}
@@ -138,25 +172,32 @@ public class ProgramReader
 
 	private Command readPart()
 	{
-		switch (this.chars.charAt(this.loc))
+		char c = this.chars.charAt(this.loc);
+		if (c == Config.right || c == Config.left)
 		{
-			case '>':
-			case '<':
-				return this.readMoves();
-			case '+':
-			case '-':
-				return this.readAdd();
-			case '[':
-				return new CommandJump(this.loc);
-			case ']':
-				return new CommandBack(this.loc);
-			case '.':
-				return new CommandWrite(this.loc);
-			case ',':
-				return new CommandRead(this.loc);
-			default:
-				return null;
+			return this.readMoves();
 		}
+		if (c == Config.inc || c == Config.dec)
+		{
+			return this.readAdd();
+		}
+		if (c == Config.jump)
+		{
+			return new CommandJump(this.loc);
+		}
+		if (c == Config.back)
+		{
+			return new CommandBack(this.loc);
+		}
+		if (c == Config.write)
+		{
+			return new CommandWrite(this.loc);
+		}
+		if (c == Config.read)
+		{
+			return new CommandRead(this.loc);
+		}
+		return null;
 	}
 
 	public CommandAdd readAdd()
@@ -166,11 +207,11 @@ public class ProgramReader
 		while (this.loc < this.chars.length())
 		{
 			char c = this.chars.charAt(this.loc);
-			if (c == '+')
+			if (c == Config.inc)
 			{
 				num++;
 			}
-			else if (c == '-')
+			else if (c == Config.dec)
 			{
 				num--;
 			}
@@ -191,15 +232,15 @@ public class ProgramReader
 		while (this.loc < this.chars.length())
 		{
 			char c = this.chars.charAt(this.loc);
-			if (c == '>')
+			if (c == Config.right)
 			{
 				num++;
 			}
-			else if (c == '<')
+			else if (c == Config.left)
 			{
 				num--;
 			}
-			else
+			else if (Config.isValid(c))
 			{
 				this.loc--;
 				break;

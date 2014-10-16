@@ -13,4 +13,9 @@ public abstract class Output
 	public EnumOutType type;
 	
 	public abstract void write(byte b);
+	
+	public long delayedTime()
+	{
+		return 0;
+	}
 }

@@ -1,5 +1,6 @@
 package net.eekysam.jflick.command;
 
+import net.eekysam.jflick.Config;
 import net.eekysam.jflick.Program;
 import net.eekysam.jflick.Command;
 
@@ -12,10 +13,13 @@ public class CommandRead extends Command
 
 	public int run(int point, Program app)
 	{
-		long ns = System.nanoTime();
 		app.mem.set(app.memPoint, app.in.read());
-		ns = System.nanoTime() - ns;
-		app.waitTime += ns;
 		return point + 1;
+	}
+
+	@Override
+	public String expand()
+	{
+		return "" + Config.read;
 	}
 }

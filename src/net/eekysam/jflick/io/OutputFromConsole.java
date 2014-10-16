@@ -11,20 +11,18 @@ public class OutputFromConsole extends Output
 	
 	public void write(byte b)
 	{
-		char c = (char) b;
-		boolean t = !(Character.isWhitespace(c) || Character.isISOControl(c));
-		String hex = Long.toHexString(b & (long) 0xFF);
-		hex = hex.toUpperCase();
-		if (hex.length() < 2)
-		{
-			hex = "0" + hex;
-		}
 		switch (this.type)
 		{
 			case RAW:
-				System.out.print(c);
+				System.out.print((char) b);
 				return;
 			case HEX:
+				String hex = Long.toHexString(b & (long) 0xFF);
+				hex = hex.toUpperCase();
+				if (hex.length() < 2)
+				{
+					hex = "0" + hex;
+				}
 				System.out.print(hex);
 				return;
 			case DEC:
@@ -32,7 +30,8 @@ public class OutputFromConsole extends Output
 				System.out.print(" ");
 				return;
 			case CAR:
-				if (t)
+				char c = (char) b;
+				if (!(Character.isWhitespace(c) || Character.isISOControl(c)))
 				{
 					System.out.println(c);
 				}

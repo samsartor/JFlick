@@ -4,32 +4,34 @@ import net.eekysam.jflick.Config;
 import net.eekysam.jflick.Program;
 import net.eekysam.jflick.Command;
 
-public class CommandMove extends Command
+public class CommandZeroSet extends Command
 {
-	public int num;
-
-	public CommandMove(int num, int loc)
+	public int value;
+	
+	public CommandZeroSet(int loc)
 	{
 		super(loc);
-		this.num = num;
 	}
 
 	public int run(int point, Program app)
 	{
-		app.memPoint += num;
+		app.mem.set(app.memPoint, (byte) value);
 		return point + 1;
 	}
-
+	
 	@Override
 	public String expand()
 	{
 		String com = "";
-		char op = Config.right;
-		if (this.num < 0)
+		com += Config.jump;
+		com += Config.dec;
+		com += Config.back;
+		char op = Config.inc;
+		if (this.value < 0)
 		{
-			op = Config.left;
+			op = Config.dec;
 		}
-		for (int i = 0; i < Math.abs(this.num); i++)
+		for (int i = 0; i < Math.abs(this.value); i++)
 		{
 			com += op;
 		}

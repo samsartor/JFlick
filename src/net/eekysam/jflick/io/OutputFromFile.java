@@ -20,22 +20,20 @@ public class OutputFromFile extends Output
 	@Override
 	public void write(byte b)
 	{
-		char c = (char) b;
-		boolean t = !(Character.isWhitespace(c) || Character.isISOControl(c));
-		String hex = Long.toHexString(b & (long) 0xFF);
-		hex = hex.toUpperCase();
-		if (hex.length() < 2)
-		{
-			hex = "0" + hex;
-		}
 		try
 		{
 			switch (this.type)
 			{
 				case RAW:
-					this.out.write((byte) c);
+					this.out.write(b);
 					return;
 				case HEX:
+					String hex = Long.toHexString(b & (long) 0xFF);
+					hex = hex.toUpperCase();
+					if (hex.length() < 2)
+					{
+						hex = "0" + hex;
+					}
 					this.out.write(hex.getBytes());
 					return;
 				case DEC:
@@ -43,7 +41,8 @@ public class OutputFromFile extends Output
 					System.out.print(" ");
 					return;
 				case CAR:
-					if (t)
+					char c = (char) b;
+					if (!(Character.isWhitespace(c) || Character.isISOControl(c)))
 					{
 						this.out.write((byte) c);
 						this.out.write((byte) '\n');
@@ -60,6 +59,5 @@ public class OutputFromFile extends Output
 		{
 
 		}
-
 	}
 }
