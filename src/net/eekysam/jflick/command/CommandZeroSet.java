@@ -26,15 +26,7 @@ public class CommandZeroSet extends Command
 		com += Config.jump;
 		com += Config.dec;
 		com += Config.back;
-		char op = Config.inc;
-		if (this.value < 0)
-		{
-			op = Config.dec;
-		}
-		for (int i = 0; i < Math.abs(this.value); i++)
-		{
-			com += op;
-		}
+		com += this.expandPart(this.value, Config.inc, Config.dec);
 		return com;
 	}
 }

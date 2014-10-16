@@ -23,16 +23,6 @@ public class CommandMove extends Command
 	@Override
 	public String expand()
 	{
-		String com = "";
-		char op = Config.right;
-		if (this.num < 0)
-		{
-			op = Config.left;
-		}
-		for (int i = 0; i < Math.abs(this.num); i++)
-		{
-			com += op;
-		}
-		return com;
+		return this.expandPart(this.num, Config.right, Config.left);
 	}
 }

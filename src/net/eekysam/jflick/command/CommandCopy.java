@@ -27,33 +27,9 @@ public class CommandCopy extends Command
 	public String expand()
 	{
 		String com = "[";
-		char op = Config.right;
-		if (this.move < 0)
-		{
-			op = Config.left;
-		}
-		for (int i = 0; i < Math.abs(this.move); i++)
-		{
-			com += op;
-		}
-		op = Config.inc;
-		if (this.mult < 0)
-		{
-			op = Config.dec;
-		}
-		for (int i = 0; i < Math.abs(this.mult); i++)
-		{
-			com += op;
-		}
-		op = Config.left;
-		if (this.move < 0)
-		{
-			op = Config.right;
-		}
-		for (int i = 0; i < Math.abs(this.move); i++)
-		{
-			com += op;
-		}
+		com += this.expandPart(this.move, Config.right, Config.left);
+		com += this.expandPart(this.mult, Config.inc, Config.dec);
+		com += this.expandPart(this.move, Config.left, Config.right);
 		com += "-]";
 		return com;
 	}

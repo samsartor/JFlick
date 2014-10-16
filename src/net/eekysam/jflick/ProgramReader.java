@@ -3,16 +3,20 @@ package net.eekysam.jflick;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import net.eekysam.jflick.command.CommandAdd;
 import net.eekysam.jflick.command.CommandBack;
 import net.eekysam.jflick.command.CommandCopy;
+import net.eekysam.jflick.command.CommandCopyLarge;
 import net.eekysam.jflick.command.CommandFindZero;
 import net.eekysam.jflick.command.CommandJump;
 import net.eekysam.jflick.command.CommandMove;
 import net.eekysam.jflick.command.CommandRead;
 import net.eekysam.jflick.command.CommandWrite;
 import net.eekysam.jflick.command.CommandZero;
+import net.eekysam.jflick.command.CommandZeroSet;
 
 public class ProgramReader
 {
@@ -50,7 +54,8 @@ public class ProgramReader
 		this.readBase();
 		this.simplifyZero();
 		this.simplifyFindZero();
-		this.simplifyMove();
+		this.simplifyZeroSet();
+		this.simplifyCopy();
 		this.updateLocs();
 		this.num = this.app.size();
 
@@ -101,31 +106,101 @@ public class ProgramReader
 		}
 	}
 
-	private void simplifyMove()
+	private void simplifyCopy()
 	{
-		for (int i = 0; i < this.app.size() - 6; i++)
+		for (int i = 1; i < this.app.size(); i++)
+		{
+			Command a = this.app.get(i);
+			if (a instanceof CommandBack)
+			{
+				boolean flag = true;
+				int k = 0;
+				int off = 0;
+				HashMap<Integer, Integer> dests = new HashMap<Integer, Integer>();
+				Command c = null;
+				for (int j = i - 1; j >= 0; j--)
+				{
+					Command b = this.app.get(j);
+					if (b instanceof CommandJump)
+					{
+						c = b;
+						k = j;
+						break;
+					}
+					if (b instanceof CommandAdd)
+					{
+						int sum = 0;
+						if (dests.containsKey(off))
+						{
+							sum = dests.get(off);
+						}
+						sum += ((CommandAdd) b).num;
+						dests.put(off, sum);
+					}
+					else if (b instanceof CommandMove)
+					{
+						off -= ((CommandMove) b).num;
+					}
+					else
+					{
+						flag = false;
+						break;
+					}
+				}
+				if (!dests.containsKey(0) || (int) dests.get(0) != -1 || off != 0)
+				{
+					flag = false;
+				}
+				if (flag)
+				{
+					for (int j = k; j <= i; j++)
+					{
+						this.app.remove(k);
+					}
+					dests.remove(0);
+					if (dests.size() == 1)
+					{
+						CommandCopy com = new CommandCopy(c.loc);
+						for (Entry<Integer, Integer> ent : dests.entrySet())
+						{
+							com.move = ent.getKey();
+							com.mult = ent.getValue();
+						}
+						this.app.add(k, com);
+					}
+					else
+					{
+					CommandCopyLarge com = new CommandCopyLarge(c.loc);
+					com.mult = new int[dests.size()];
+					com.offs = new int[dests.size()];
+					int j = 0;
+					for (Entry<Integer, Integer> ent : dests.entrySet())
+					{
+						com.offs[j] = ent.getKey();
+						com.mult[j] = ent.getValue();
+						j++;
+					}
+					this.app.add(k, com);
+					}
+					i = k + 1;
+				}
+			}
+		}
+	}
+
+	private void simplifyZeroSet()
+	{
+		for (int i = 0; i < this.app.size() - 2; i++)
 		{
 			Command a = this.app.get(i);
 			Command b = this.app.get(i + 1);
-			Command c = this.app.get(i + 2);
-			Command d = this.app.get(i + 3);
-			Command e = this.app.get(i + 4);
-			Command f = this.app.get(i + 5);
-			if (a instanceof CommandJump && b instanceof CommandMove && c instanceof CommandAdd && d instanceof CommandMove && e instanceof CommandAdd && f instanceof CommandBack)
+			if (a instanceof CommandZero && b instanceof CommandAdd)
 			{
-				if (((CommandMove) b).num == -((CommandMove) d).num && ((CommandAdd) e).num == -1)
-				{
-					this.app.remove(i);
-					this.app.remove(i);
-					this.app.remove(i);
-					this.app.remove(i);
-					this.app.remove(i);
-					this.app.remove(i);
-					CommandCopy com = new CommandCopy(a.loc);
-					com.move = ((CommandMove) b).num;
-					com.mult = ((CommandAdd) c).num;
-					this.app.add(i, com);
-				}
+				this.app.remove(i);
+				this.app.remove(i);
+				CommandZeroSet com = new CommandZeroSet(a.loc);
+				com.value = ((CommandAdd) b).num;
+				this.app.add(i, com);
 			}
 		}
 	}
@@ -215,7 +290,7 @@ public class ProgramReader
 			{
 				num--;
 			}
-			else
+			else if (Config.isValid(c))
 			{
 				this.loc--;
 				break;
